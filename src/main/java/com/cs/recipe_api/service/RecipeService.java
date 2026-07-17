@@ -13,7 +13,9 @@ import com.cs.recipe_api.model.User;
 import com.cs.recipe_api.repository.RatingRepository;
 import com.cs.recipe_api.repository.RecipeRepository;
 import com.cs.recipe_api.repository.UserRepository;
+import com.cs.recipe_api.specification.RecipeSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,6 +61,18 @@ public class RecipeService {
         Recipe recipe = recipeRepository.findById(id)
                 .orElseThrow(() -> new RecipeNotFoundException("Recipe not found with id: " + id));
         return toResponseDto(recipe);
+    }
+
+    public List<RecipeResponseDto> searchRecipes(String cuisine, String title, String ingredient) {
+        Specification<Recipe> spec = Specification
+                .where(RecipeSpecification.hasCuisine(cuisine))
+                .and(RecipeSpecification.titleContains(title))
+                .and(RecipeSpecification.hasIngredient(ingredient));
+
+        return recipeRepository.findAll(spec)
+                .stream()
+                .map(this::toResponseDto)
+                .toList();
     }
 
     private RecipeResponseDto toResponseDto(Recipe recipe) {
